@@ -1,0 +1,383 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title >{{.Title}}</title>
+    <link rel="stylesheet" href="/views/style.css">
+    <style>
+        *{
+            background-color: rgb(58, 52, 52);
+            color:white;
+            font-size: 18px;
+        }
+        table {
+    width: 100%;
+    border-collapse: collapse;
+}
+h1{
+    text-align: center;
+    font-size: 50px;
+    color: yellow;
+}
+th, td {
+    border: 1px solid white;
+    text-align: left;
+    padding: 8px;
+    color: white;
+}
+th {
+    background-color: rgb(206, 13, 13);
+}
+button {
+    margin: 20px 0;
+    padding: 10px 20px;
+    background-color: rgb(206, 13, 13);
+    color: wheat;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #45a049;
+}
+/* Hide the popup by default */
+.popup {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Black background with opacity */
+}
+
+/* Popup content box */
+.popup-content {
+  background-color: red;
+  color: white;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 300px;
+  text-align: center;
+  border-radius: 8px;
+}
+
+/* Close button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+    </style>
+</head>
+<body>
+    <h1>{{.Title}}</h1>
+    <!-- Trigger Button -->
+  <button onclick="openPopup('searchbook')">Search by BookName</button>
+  <!-- Popup Container -->
+  <div id="searchbook" class="popup">
+    <div class="popup-content"> 
+        <span class="close" onclick="closePopup('searchbook')">&times;</span>
+        <p>
+            <!--to search for books-->
+    <form action="/books/search" method="GET" id="search">
+        <label for="name">Enter book Name:</label>
+        <input type="text" id="Id" name="name" placeholder="Search by Name">
+        <button type="submit">Search Book</button>
+    </form>
+        </p>
+      </div>
+    </div>
+
+    
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Author</th>
+                <th>Publication</th>
+                <th>Created_at</th>
+                <th>Update</th>
+                <th>Delete</th>
+                <th>Download</th>
+            
+            </tr>
+        </thead>
+        <tbody>
+            {{range .BookStats}}
+            <tr>
+                <td>{{.ID}}</td>
+                <td>{{.Name}}</td>
+                <td>{{.Author}}</td>
+                <td>{{.Publication}}</td>
+                <td>{{.CreatedAt}}</td>
+                <td>
+                    <button onclick="openPopup('updatebook{{.ID}}')">Update book</button>
+  <!-- Popup Container -->
+  <div id="updatebook{{.ID}}" class="popup">
+    <div class="popup-content"> 
+        <span class="close" onclick="closePopup('updatebook{{.ID}}')">&times;</span>
+        <h2>Update Book</h2>
+           <!--to update book-->
+           <form action="/book/{{.ID}}" method="POST" style="display:inline;">
+                
+            <label for="name{{.ID}}">Name:</label>
+            <input type="text" id="name{{.ID}}" name="name" value="{{.Name}}" required><br><br>
+    
+            <label for="author{{.ID}}">Author:</label>
+            <input type="text" id="author{{.ID}}" name="author" value="{{.Author}}" required><br><br>
+    
+            <label for="publication{{.ID}}">Publication:</label>
+            <input type="text" id="publication{{.ID}}" name="publication" value="{{.Publication}}" required><br><br>
+        
+            <button type="submit">Update</button>
+        </form>
+      </div>
+    </div>
+                </td>
+                <td>
+                    <form action="/book/delete/{{.ID}}" method="POST" style="display:inline;">
+                        <button type="submit">Delete book</button>
+                    </form>
+                </td>
+                <td>
+                    <form action="/download/{{.ID}}" method="GET" style="display:inline;">
+                        <button type="submit">Download book PDF</button>
+                    </form>
+                </td>
+        </tr>
+            {{end}}
+        </tbody>
+    </table>
+    <!-- Trigger Button -->
+<button onclick="openPopup('uploadCSV')">Upload books</button>
+<!-- Popup Container -->
+<div id="uploadCSV" class="popup" style="display: none;">
+    <div class="popup-content"> 
+        <span class="close" onclick="closePopup('uploadCSV')">&times;</span>
+        <h2>Upload CSV File</h2>
+    <!--to upload csv-->
+<form action="/upload/csv" method="POST" enctype="multipart/form-data">
+    <input type="file" id="csvFile" accept=".csv">
+        <button type="button" onclick="uploadCSV('uploadCSV')">Upload bOOKS</button>
+    </form>
+</div>
+</div>
+<button onclick="window.location.href='/report/csv'">Download books</button>
+
+<!-- Trigger Button -->
+<button onclick="openPopup('uploadPDF')">Upload PDF</button>
+<!-- Popup Container -->
+<div id="uploadPDF" class="popup" style="display: none;">
+    <div class="popup-content"> 
+        <span class="close" onclick="closePopup('uploadPDF')">&times;</span>
+        <h2>Upload PDF File</h2>
+    <!--to upload PDF-->
+<form id="uploadPDFForm" action="/upload/pdf" method="POST" enctype="multipart/form-data">
+    <label for="pdfID">Book ID:</label>
+    <input type="number" id="pdfID" name="book_id" required placeholder="Enter Book ID">
+    <br>
+    <label for="pdfFile">Upload PDF:</label>
+    <input type="file"  id="pdfFile" name="pdffile" accept=".pdf" required>
+    <br>
+        <button type="button" onclick="uploadPDF('uploadPDF')">Upload PDF</button>
+    </form>        
+    </div>
+</body>
+
+<script>
+    // Function to open the popup
+function openPopup(searchbook) {
+document.getElementById(searchbook).style.display = "block";
+}
+
+// Function to close the popup
+function closePopup(searchbook) {
+document.getElementById(searchbook).style.display = "none";
+}
+
+
+function openPopup(uploadCSV) {
+document.getElementById(uploadCSV).style.display="block";   
+}
+
+// Function to close the popup
+function closePopup(uploadCSV) {
+document.getElementById(uploadCSV).style.display = "none";
+}
+function uploadCSV(uploadCSV) {
+const fileInput = document.getElementById("csvFile");
+// Debugging outputs
+if (!fileInput) {
+        console.error("File input element not found.");
+        alert("File input element is missing.");
+        return;
+    }
+    console.log("File input element:", fileInput);
+    console.log("Selected file:", fileInput.files);
+console.log("File input element:", fileInput); // Check if fileInput is found
+const file = fileInput.files[0];
+if (!file) {
+    alert("Please select a file before uploading.");
+    return;
+}
+
+  // Validate the file type
+if (file.type !== "csv" && !file.name.endsWith('.csv')) {
+    alert("Please upload a valid CSV file.");
+    return;
+}
+const formData = new FormData();
+formData.append("csvfile", file);
+
+fetch("/upload/csv", {
+    method: "POST",
+    body: formData,
+})
+    .then(response => {
+    if (!response.ok) {
+        return response.text().then(errorMessage => {
+        throw new Error(errorMessage);
+        });
+    }
+      return response.text(); // Or response.json() if your backend returns text
+    })
+    .then(data => {
+    alert("CSV file uploaded successfully!");
+    console.log("Server Response:", data);
+      closePopup("uploadCSV"); // Close the popup if needed
+    })
+    .catch(error => {
+    console.error("Upload Error:", error);
+    alert("Error uploading CSV file: " + error.message);
+    });
+}
+
+
+function openPopup(updatebook) {
+document.getElementById(updatebook).style.display = "block";
+}
+
+// Function to close the popup
+function closePopup(updatebook) {
+document.getElementById(updatebook).style.display = "none";
+}
+// Function to handle book update
+function updateBook(bookId) {
+const bookName = document.getElementById(`name${bookId}`).value;
+const bookAuthor = document.getElementById(`author${bookId}`).value;
+const bookPublication = document.getElementById(`publication${bookId}`).value;
+
+if (bookName && bookAuthor && bookPublication) {
+    // Create an object with the book details
+    const bookData = {
+    name: bookName,
+    author: bookAuthor,
+    publication: bookPublication,
+    };
+
+    // Perform the update operation (using fetch, for example)
+    fetch("/book/{bookId}", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json",
+    },
+    body: JSON.stringify(bookData),
+    })
+    .then(response => {
+    if (response.ok) {
+        throw new Error("Failed to update book.");
+            }
+            return response.json(); // Adjust if your server returns text
+    })
+    .then(data => {
+            console.log("Update successful:", data); // Log server response
+            alert("Book updated successfully!");
+            closePopup(`updatebook${bookId}`); // Close the popup after update
+        })
+    .catch(error => {
+    console.error("Error:", error);
+    alert("An error occurred."+error.message);
+    });
+} else {
+    alert("Please fill in all fields.");
+}
+}
+function openPopup(uploadPDF) {
+document.getElementById(uploadPDF).style.display="block";   
+}
+
+// Function to close the popup
+function closePopup(uploadPDF) {
+document.getElementById(uploadPDF).style.display = "none";
+}
+function uploadPDF(uploadPDF) {
+    const fileInput = document.getElementById("pdfFile"); // Update the ID to match the PDF input field
+    const bookIDInput = document.getElementById("pdfID");
+    // Check if elements are found
+    console.log("File Input:", fileInput); // Log the file input element
+    console.log("Book ID Input:", bookIDInput); // Log the book ID input element
+    // Debugging outputs
+    if (!fileInput|| !bookIDInput) {
+        console.error("File input element not found.");
+        alert("File input element is missing.");
+        return;
+    }
+
+    console.log("File input element:", fileInput);
+    console.log("Selected file:", fileInput.files);
+    
+    const file = fileInput.files[0];
+    if (!file) {
+        alert("Please select a file before uploading.");
+        return;
+    }
+
+    // Validate the file type for PDF
+    if (file.type !== "application/pdf" && !file.name.endsWith('.pdf')) {
+        alert("Please upload a valid PDF file.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("pdffile", file); // Change key to "pdffile"
+    formData.append("book_id", bookIDInput.value); // Append Book ID
+
+    fetch("/upload/pdf", { // Update the endpoint to match your upload handler
+        method: "POST",
+        body: formData,
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(errorMessage => {
+                throw new Error(errorMessage);
+            });
+        }
+        return response.text(); // Or response.json() if your backend returns JSON
+    })
+    .then(data => {
+        alert("PDF file uploaded successfully!");
+        console.log("Server Response:", data);
+        closePopup("uploadPDF"); // Close the popup if needed
+    })
+    .catch(error => {
+        console.error("Upload Error:", error);
+        alert("Error uploading PDF file: " + error.message);
+    });
+}
+
+</script>
+</html>
